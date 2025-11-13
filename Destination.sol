@@ -12,15 +12,27 @@ contract Destination is AccessControl {
 	mapping( address => address) public wrapped_tokens;
 	address[] public tokens;
 
-	event Creation( address indexed underlying_token, address indexed wrapped_token );
-	event Wrap( address indexed underlying_token, address indexed wrapped_token, address to, uint256 amount );
-	event Unwrap( address indexed underlying_token, address indexed wrapped_token, address frm, address to, uint256 amount );
+	event Creation(address indexed underlying_token, address indexed wrapped_token);
+	event Wrap(address indexed underlying_token, address indexed wrapped_token, address to, uint256 amount);
+	event Unwrap(address indexed underlying_token, address indexed wrapped_token, address frm, address to, uint256 amount);
 
     constructor( address admin ) {
         _grantRole(DEFAULT_ADMIN_ROLE, admin);
         _grantRole(CREATOR_ROLE, admin);
         _grantRole(WARDEN_ROLE, admin);
     }
+
+	function createToken(address _underlying_token, string memory name, string memory symbol ) public onlyRole(CREATOR_ROLE) returns(address) {
+		//YOUR CODE HERE
+		require(underlying_tokens[_underlying_token] == address(0), "Token already exists");
+		BridgeToken token = new BridgeToken(name, symbol, _underlying_token);
+		underlying_tokens[_underlying_token] = address(token);
+		wrapped_tokens[address(token)] = _underlying_token;
+		tokens.push(address(token));
+		emit Creation(_underlying_token, address(token));
+		return address(token);
+
+	}
 
 	function wrap(address _underlying_token, address _recipient, uint256 _amount ) public onlyRole(WARDEN_ROLE) {
 		//YOUR CODE HERE
@@ -39,18 +51,6 @@ contract Destination is AccessControl {
 	
 	    BridgeToken(_wrapped_token).burnFrom(msg.sender, _amount);
 	    emit Unwrap(underlying, _wrapped_token, msg.sender, _recipient, _amount);
-	}
-
-	function createToken(address _underlying_token, string memory name, string memory symbol ) public onlyRole(CREATOR_ROLE) returns(address) {
-		//YOUR CODE HERE
-		require(underlying_tokens[_underlying_token] == address(0), "Token already exists");
-		BridgeToken token = new BridgeToken(name, symbol, _underlying_token);
-		underlying_tokens[_underlying_token] = address(token);
-		wrapped_tokens[address(token)] = _underlying_token;
-		tokens.push(address(token));
-		emit Creation(_underlying_token, address(token));
-		return address(token);
-
 	}
 
 }
