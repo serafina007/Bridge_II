@@ -13,8 +13,8 @@ contract Destination is AccessControl {
 	address[] public tokens;
 
 	event Creation( address indexed underlying_token, address indexed wrapped_token );
-	event Wrap( address indexed underlying_token, address indexed wrapped_token, address indexed to, uint256 amount );
-	event Unwrap( address indexed underlying_token, address indexed wrapped_token, address frm, address indexed to, uint256 amount );
+	event Wrap( address indexed underlying_token, address indexed wrapped_token, address to, uint256 amount );
+	event Unwrap( address indexed underlying_token, address indexed wrapped_token, address frm, address to, uint256 amount );
 
     constructor( address admin ) {
         _grantRole(DEFAULT_ADMIN_ROLE, admin);
@@ -43,9 +43,7 @@ contract Destination is AccessControl {
 
 	function createToken(address _underlying_token, string memory name, string memory symbol ) public onlyRole(CREATOR_ROLE) returns(address) {
 		//YOUR CODE HERE
-		require(underlying_tokens[_underlying_token] == address(0),
-		"Token already exists"
-		);
+		require(underlying_tokens[_underlying_token] == address(0), "Token already exists");
 		BridgeToken token = new BridgeToken(name, symbol, _underlying_token);
 		underlying_tokens[_underlying_token] = address(token);
 		wrapped_tokens[address(token)] = _underlying_token;
