@@ -24,14 +24,40 @@ contract Destination is AccessControl {
 
 	function wrap(address _underlying_token, address _recipient, uint256 _amount ) public onlyRole(WARDEN_ROLE) {
 		//YOUR CODE HERE
+		address wrapped = underlying_tokens[_underlying_token];
+        require(wrapped != address(0), "Token not registered");
+
+        BridgeToken(wrapped).mint(_recipient, _amount);
+
+        emit Wrap(_underlying_token, wrapped, _recipient, _amount);
 	}
 
 	function unwrap(address _wrapped_token, address _recipient, uint256 _amount ) public {
 		//YOUR CODE HERE
+		require(wrapped_tokens[_wrapped_token] != address(0), "Invalid token");
+
+        BridgeToken token = BridgeToken(_wrapped_token);
+
+        token.burnFrom(msg.sender, _amount);
+
+        address underlying = wrapped_tokens[_wrapped_token];
+        emit Unwrap(underlying, _wrapped_token, msg.sender, _recipient, _amount);
 	}
 
 	function createToken(address _underlying_token, string memory name, string memory symbol ) public onlyRole(CREATOR_ROLE) returns(address) {
 		//YOUR CODE HERE
+		require(underlying_tokens[_underlying_token] == address(0),
+		"Token already exists"
+		);
+		BridgeToken token = new BridgeToken(name, symbol, _underlying_token);
+		underlying_tokens[_underlying_token] = address(token);
+        wrapped_tokens[address(token)] = _underlying_token;
+
+        tokens.push(address(token));
+
+        emit Creation(_underlying_token, address(token));
+        return address(token);
+
 	}
 
 }
